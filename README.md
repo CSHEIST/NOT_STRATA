@@ -1,5 +1,9 @@
 # ROS 2 Waypoint-Navigated Rover with a Vision-Guided Robotic Arm
 
+
+
+Video Link : https://drive.google.com/file/d/12O14GR9M8o7ekv2aiXu9AUbgY-6P4I7M/view?usp=sharing
+
 A modular robotics project that combines a mobile rover, a tabletop robotic arm, and a camera-based sorting workstation. The intended system uses **ROS 2 waypoint navigation** to bring the rover to a workstation, detects coloured objects with a fixed camera, and uses the robotic arm to sort them.
 
 > **Development status:** This repository documents an incremental project. The current arm-control milestone is **manual RViz joint-slider control through ROS 2, UDP, an ESP32, and a PCA9685 servo driver**. The elbow joint and a separate virtual gripper command slider are included in the robot description/control path. IK, validated vision-to-workspace calibration, and fully autonomous pick-and-place are future integration milestones; they should not be considered complete until tested on the physical system.
