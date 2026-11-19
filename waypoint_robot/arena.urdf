@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<robot name="arena">
+
+  <!-- ROOT -->
+  <link name="floor">
+    <visual>
+      <geometry>
+        <box size="2 1 0.01"/>
+      </geometry>
+      <material name="gray">
+        <color rgba="0.7 0.7 0.7 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- WALL 1 -->
+  <link name="wall_1">
+    <visual>
+      <geometry>
+        <box size="2 0.05 0.3"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="wall_1_joint" type="fixed">
+    <parent link="floor"/>
+    <child link="wall_1"/>
+    <origin xyz="1 0 0.15"/>
+  </joint>
+
+  <!-- WALL 2 -->
+  <link name="wall_2">
+    <visual>
+      <geometry>
+        <box size="2 0.05 0.3"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <joint name="wall_2_joint" type="fixed">
+    <parent link="floor"/>
+    <child link="wall_2"/>
+    <origin xyz="1 1 0.15"/>
+  </joint>
+
+  <!-- WALL 3 -->
+  <link name="wall_3">
+    <visual>
+      <geometry>
+        <box size="0.05 1 0.3"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <joint name="wall_3_joint" type="fixed">
+    <parent link="floor"/>
+    <child link="wall_3"/>
+    <origin xyz="0 0.5 0.15"/>
+  </joint>
+
+  <!-- WALL 4 -->
+  <link name="wall_4">
+    <visual>
+      <geometry>
+        <box size="0.05 1 0.3"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <joint name="wall_4_joint" type="fixed">
+    <parent link="floor"/>
+    <child link="wall_4"/>
+    <origin xyz="2 0.5 0.15"/>
+  </joint>
+
+</robot>

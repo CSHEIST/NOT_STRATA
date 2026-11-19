@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<robot name="arena">
+
+  <link name="arena_base">
+    <visual>
+      <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.45 1.70 0.01"/>
+      </geometry>
+      <material name="arena_floor">
+        <color rgba="0.0 0.45 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="wall_left">
+    <visual>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.04 1.70 0.20"/>
+      </geometry>
+      <material name="arena_green">
+        <color rgba="0.0 0.8 0.1 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="wall_left_joint" type="fixed">
+    <parent link="arena_base"/>
+    <child link="wall_left"/>
+    <origin xyz="-0.205 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="wall_right">
+    <visual>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.04 1.70 0.20"/>
+      </geometry>
+      <material name="arena_green">
+        <color rgba="0.0 0.8 0.1 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="wall_right_joint" type="fixed">
+    <parent link="arena_base"/>
+    <child link="wall_right"/>
+    <origin xyz="0.205 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="wall_top">
+    <visual>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.45 0.04 0.20"/>
+      </geometry>
+      <material name="arena_green">
+        <color rgba="0.0 0.8 0.1 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="wall_top_joint" type="fixed">
+    <parent link="arena_base"/>
+    <child link="wall_top"/>
+    <origin xyz="0 0.83 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="wall_bottom">
+    <visual>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.45 0.04 0.20"/>
+      </geometry>
+      <material name="arena_green">
+        <color rgba="0.0 0.8 0.1 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="wall_bottom_joint" type="fixed">
+    <parent link="arena_base"/>
+    <child link="wall_bottom"/>
+    <origin xyz="0 -0.83 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
