@@ -1,0 +1,425 @@
+<?xml version="1.0"?>
+
+<robot name="robotic_arm"
+       xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===================================================== -->
+  <!-- BASE LINK                                             -->
+  <!-- ===================================================== -->
+
+  <link name="base_link">
+
+    <visual name="base_visual">
+
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <mesh
+          filename="package://robotic_arm_description/meshes/base.stl"
+          scale="0.001 0.001 0.001"/>
+      </geometry>
+
+    </visual>
+
+  </link>
+
+
+  <!-- ===================================================== -->
+  <!-- BASE JOINT                                            -->
+  <!-- ===================================================== -->
+  <joint name="base_joint" type="revolute">
+      <parent link="base_link"/>
+      <child link="waist_link"/>
+      <origin xyz="0 0 0.57" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit
+    lower="-1.279"
+    upper="1.279"
+    effort="10"
+    velocity="2.0"/>
+  </joint>
+
+
+  <!-- ===================================================== -->
+  <!-- WAIST LINK                                            -->
+  <!-- ===================================================== -->
+
+  <link name="waist_link">
+
+    <visual name="waist_visual">
+
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <mesh
+          filename="package://robotic_arm_description/meshes/waist.stl"
+          scale="0.001 0.001 0.001"/>
+      </geometry>
+
+    </visual>
+
+  </link>
+
+
+  <!-- ===================================================== -->
+  <!-- SHOULDER JOINT                                        -->
+  <!-- ===================================================== -->
+
+  <joint name="shoulder_joint"
+         type="revolute">
+
+    <parent link="waist_link"/>
+    <child link="arm01_link"/>
+
+    <origin
+      xyz="0 0.095 0.4"
+      rpy="0 0 0"/>
+
+    <axis xyz="1 0 0"/>
+
+    <limit
+      lower="-1.5708"
+      upper="1.5708"
+      effort="10"
+      velocity="1.0"/>
+
+  </joint>
+
+
+  <!-- ===================================================== -->
+  <!-- ARM01 LINK                                            -->
+  <!-- ===================================================== -->
+
+  <link name="arm01_link">
+
+    <visual name="arm01_visual">
+
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <mesh
+          filename="package://robotic_arm_description/meshes/arm01.stl"
+          scale="0.001 0.001 0.001"/>
+      </geometry>
+
+    </visual>
+
+  </link>
+
+
+  <!-- ===================================================== -->
+  <!-- ELBOW JOINT                                           -->
+  <!-- ===================================================== -->
+
+  <joint name="elbow_joint"
+         type="revolute">
+
+    <parent link="arm01_link"/>
+    <child link="arm02_link"/>
+
+    <!-- Keep your current working value -->
+    <origin
+      xyz="0 0 1.2"
+      rpy="0 0 0"/>
+
+    <axis xyz="1 0 0"/>
+
+    <limit
+      lower="-1.5708"
+      upper="1.5708"
+      effort="10"
+      velocity="1.0"/>
+
+  </joint>
+
+
+  <!-- ===================================================== -->
+  <!-- ARM02 LINK                                            -->
+  <!-- ===================================================== -->
+
+  <link name="arm02_link">
+
+    <visual name="arm02_visual">
+
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <mesh
+          filename="package://robotic_arm_description/meshes/arm02.stl"
+          scale="0.001 0.001 0.001"/>
+      </geometry>
+
+    </visual>
+
+  </link>
+
+
+  <!-- ===================================================== -->
+  <!-- WRIST JOINT                                           -->
+  <!-- ===================================================== -->
+
+  <joint name="wrist_joint" type="revolute">
+    <parent link="arm02_link"/>
+    <child link="arm03_link"/>
+    <origin xyz="0 0.912 0.07" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-1.5708" upper="1.5708"
+           effort="10" velocity="1.0"/>
+  </joint>
+
+
+  <!-- ===================================================== -->
+  <!-- ARM03 LINK                                            -->
+  <!-- ===================================================== -->
+
+  <link name="arm03_link">
+
+    <visual name="arm03_visual">
+
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <mesh
+          filename="package://robotic_arm_description/meshes/arm03.stl"
+          scale="0.001 0.001 0.001"/>
+      </geometry>
+
+    </visual>
+
+  </link>
+
+
+  <!-- ===================================================== -->
+  <!-- GRIPPER JOINT                                         -->
+  <!-- ===================================================== -->
+
+  <!-- Revolute gripper-orientation joint; preserve the original mount pose. -->
+  <joint name="gripper_joint" type="revolute">
+    <parent link="arm03_link"/>
+    <child link="gripper_link"/>
+    <origin xyz="-0.07 0.12 -0.1" rpy="-1.5708 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-1.5708" upper="1.5708"
+           effort="5" velocity="1.0"/>
+  </joint>
+
+  <!-- Virtual slider used only to issue OPEN/CLOSE commands to the ESP32. -->
+  <!-- This link has no visual geometry, so the slider does not animate the gripper. -->
+  <link name="gripper_command_link"/>
+
+  <joint name="gripper_command_joint" type="revolute">
+    <parent link="gripper_link"/>
+    <child link="gripper_command_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.0" upper="1.0"
+           effort="1.0" velocity="1.0"/>
+  </joint>
+
+  <!-- ===================================================== -->
+  <!-- GRIPPER LINK                                          -->
+  <!-- ===================================================== -->
+
+  <link name="gripper_link">
+
+    <visual name="gripper_visual">
+
+      <!-- Gripper STL origin = connection center -->
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <mesh
+          filename="package://robotic_arm_description/meshes/gripper.stl"
+          scale="0.01 0.01 0.01"/>
+      </geometry>
+
+    </visual>
+
+  </link>
+
+
+  <!-- ===================================================== -->
+  <!-- TOOL0                                                 -->
+  <!-- ===================================================== -->
+
+  <joint name="tool0_joint"
+         type="fixed">
+
+    <parent link="gripper_link"/>
+    <child link="tool0"/>
+
+    <origin
+      xyz="-0.04 0.07 1.35"
+      rpy="0 0 0"/>
+
+  </joint>
+
+  <link name="tool0"/>
+
+
+  <!-- ===================================================== -->
+  <!-- PHYSICAL WORKSPACE                                    -->
+  <!-- ===================================================== -->
+  <!-- Overall board: 420 x 270 x 5 mm                       -->
+  <!-- Usable white area: 400 x 250 mm                       -->
+  <!-- Black border width: 10 mm                             -->
+  <!-- Nearest usable edge from base center: 60 mm          -->
+  <!-- Workspace plane: Z = 0                               -->
+  <!-- ===================================================== -->
+
+  <link name="workspace_link">
+
+    <!-- White foam board -->
+
+    <visual name="workspace_surface">
+
+      <origin
+        xyz="0 0 0.0025"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <box size="2 1.5 0.005"/>
+      </geometry>
+
+      <material name="workspace_white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
+      </material>
+
+    </visual>
+
+    <!-- Workspace collision for later Gazebo use -->
+
+    <collision name="workspace_collision">
+
+      <origin
+        xyz="0 2 0.0025"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <box size="0.42 0.27 0.005"/>
+      </geometry>
+
+    </collision>
+
+  </link>
+
+
+  <!-- ===================================================== -->
+  <!-- WORKSPACE POSITION                                   -->
+  <!-- ===================================================== -->
+  <!-- Workspace center = X 0, Y 185 mm, Z 0               -->
+  <!-- Usable X range = -200 mm to +200 mm                  -->
+  <!-- Usable Y range = 60 mm to 310 mm                     -->
+  <!-- ===================================================== -->
+
+  <joint name="workspace_joint"
+         type="fixed">
+
+    <parent link="base_link"/>
+    <child link="workspace_link"/>
+
+    <origin
+      xyz="0 2 0"
+      rpy="0 0 0"/>
+
+  </joint>
+
+
+  <!-- ===================================================== -->
+  <!-- CAMERA                                                -->
+  <!-- ===================================================== -->
+  <!-- Camera is centered over the workspace.                -->
+  <!-- Board top surface = 5 mm                              -->
+  <!-- Camera height above board = 280 mm                    -->
+  <!-- Camera reference height = 285 mm                      -->
+  <!-- ===================================================== -->
+
+  <link name="camera_link">
+
+    <visual name="camera_body">
+
+      <origin
+        xyz="0 2 0"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <box size="0.06 0.04 0.03"/>
+      </geometry>
+
+      <material name="camera_body_material">
+        <color rgba="0.03 0.03 0.03 1.0"/>
+      </material>
+
+    </visual>
+
+
+    <collision name="camera_collision">
+
+      <origin
+        xyz="0 2 0"
+        rpy="0 0 0"/>
+
+      <geometry>
+        <box size="0.06 0.04 0.03"/>
+      </geometry>
+
+    </collision>
+
+  </link>
+
+
+  <!-- ===================================================== -->
+  <!-- CAMERA MOUNT                                         -->
+  <!-- ===================================================== -->
+
+  <joint name="camera_mount_joint"
+         type="fixed">
+
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+
+    <!-- Camera centered at workspace center -->
+    <!-- Camera lens axis points downward -->
+
+    <origin
+      xyz="0 0.185 0.285"
+      rpy="0 1.5708 0"/>
+
+  </joint>
+
+
+  <!-- ===================================================== -->
+  <!-- CAMERA OPTICAL FRAME                                 -->
+  <!-- ===================================================== -->
+
+  <link name="camera_optical_frame"/>
+
+
+  <joint name="camera_optical_joint"
+         type="fixed">
+
+    <parent link="camera_link"/>
+    <child link="camera_optical_frame"/>
+
+    <!-- ROS camera optical-frame convention -->
+
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5708 0 -1.5708"/>
+
+  </joint>
+
+
+</robot>

@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+
+import math
+import os
+import socket
+import time
+
+import rclpy
+from rclpy.node import Node
+from sensor_msgs.msg import JointState
+
+
+ESP32_IP = os.environ.get("ESP32_IP", "10.148.36.116").strip()
+ESP32_PORT = 4210
+
+BASE = "base_joint"
+SHOULDER = "shoulder_joint"
+ELBOW = "elbow_joint"
+WRIST = "wrist_joint"
+GRIPPER = "gripper_joint"
+CLAW = "gripper_command_joint"
+
+BASE_LIMIT = 1.279
+SHOULDER_LIMIT = 1.5708
+ELBOW_LIMIT = 1.5708
+WRIST_LIMIT = 1.5708
+GRIPPER_LIMIT = 1.5708
+
+CLAW_OPEN_THRESHOLD = 0.15
+CLAW_GRIP_THRESHOLD = -0.15
+CLAW_CLOSE_THRESHOLD = -0.60
+
+
+def clamp(value, low, high):
+    return max(low, min(high, value))
+
+
+def map_joint_to_servo(
+    rad,
+    limit,
+    servo_min,
+    center,
+    servo_max,
+    reverse=False
+):
+    rad = clamp(rad, -limit, limit)
+
+    if reverse:
+        rad = -rad
+
+    if rad < 0.0:
+        angle = center + (rad / limit) * (center - servo_min)
+    else:
+        angle = center + (rad / limit) * (servo_max - center)
+
+    return clamp(angle, servo_min, servo_max)
+
+
+def base_to_servo(rad):
+    return map_joint_to_servo(
+        rad, BASE_LIMIT, 20.0, 90.0, 180.0
+    )
+
+
+def shoulder_to_servo(rad):
+    return map_joint_to_servo(
+        rad, SHOULDER_LIMIT, 20.0, 94.5, 170.0
+    )
+
+
+def elbow_to_servo(rad):
+    return map_joint_to_servo(
+        rad, ELBOW_LIMIT, 25.0, 90.0, 180.0,
+        reverse=True
+    )
+
+    
+def wrist_to_servo(rad):
+    return map_joint_to_servo(
+        rad, WRIST_LIMIT, 10.0, 120.0, 150.0
+    )
+
+
+def gripper_to_servo(rad):
+    return map_joint_to_servo(
+        rad, GRIPPER_LIMIT, 20.0, 90.0, 150.0
+    )
+
+
+class ArmESP32Bridge(Node):
+
+    def __init__(self):
+        super().__init__("arm_esp32_bridge")
+
+        self.udp = socket.socket(
+            socket.AF_INET,
+            socket.SOCK_DGRAM
+        )
+
+        self.last_sent = None
+        self.last_claw_zone = 0
+        self.last_log_time = 0.0
+
+        self.subscription = self.create_subscription(
+            JointState,
+            "/joint_states",
+            self.joint_state_callback,
+            10
+        )
+
+        self.get_logger().info("Six-joint ESP32 bridge started.")
+        self.get_logger().info(
+            f"ESP32 target: {ESP32_IP}:{ESP32_PORT}"
+        )
+        self.get_logger().info(
+            "No ARM command is required by this bridge."
+        )
+        self.get_logger().info(
+            "Claw slider: positive=OPEN, mild negative=GRIP, "
+            "strong negative=CLOSE, centre=HOLD."
+        )
+
+    def joint_state_callback(self, msg):
+        joints = dict(zip(msg.name, msg.position))
+
+        required = (
+            BASE,
+            SHOULDER,
+            ELBOW,
+            WRIST,
+            GRIPPER,
+            CLAW
+        )
+
+        if not all(name in joints for name in required):
+            return
+
+        if not all(
+            math.isfinite(joints[name])
+            for name in required
+        ):
+            self.get_logger().warning(
+                "Invalid joint values; command ignored."
+            )
+            return
+
+        base = base_to_servo(joints[BASE])
+        shoulder = shoulder_to_servo(joints[SHOULDER])
+        elbow = elbow_to_servo(joints[ELBOW])
+        wrist = wrist_to_servo(joints[WRIST])
+        gripper = gripper_to_servo(joints[GRIPPER])
+
+        claw_position = joints[CLAW]
+
+        if claw_position > CLAW_OPEN_THRESHOLD:
+            claw_zone = 1
+        elif claw_position < CLAW_CLOSE_THRESHOLD:
+            claw_zone = -2
+        elif claw_position < CLAW_GRIP_THRESHOLD:
+            claw_zone = -1
+        else:
+            claw_zone = 0
+
+        claw_command = "NONE"
+
+        if claw_zone != self.last_claw_zone:
+            if claw_zone == 1:
+                claw_command = "OPEN"
+            elif claw_zone == -1:
+                claw_command = "GRIP"
+            elif claw_zone == -2:
+                claw_command = "CLOSE"
+
+            self.last_claw_zone = claw_zone
+
+        values = (
+            base,
+            shoulder,
+            elbow,
+            wrist,
+            gripper
+        )
+
+        if self.last_sent is not None:
+            unchanged = all(
+                abs(a - b) < 0.2
+                for a, b in zip(values, self.last_sent)
+            )
+
+            if unchanged and claw_command == "NONE":
+                return
+
+        packet = (
+            f"BASE:{base:.1f},"
+            f"SHOULDER:{shoulder:.1f},"
+            f"ELBOW:{elbow:.1f},"
+            f"WRIST:{wrist:.1f},"
+            f"GRIPPER:{gripper:.1f},"
+            f"CLAW:{claw_command}"
+        )
+
+        try:
+            self.udp.sendto(
+                packet.encode("utf-8"),
+                (ESP32_IP, ESP32_PORT)
+            )
+
+            self.last_sent = values
+
+            now = time.monotonic()
+
+            if claw_command != "NONE" or (
+                now - self.last_log_time >= 1.0
+            ):
+                self.get_logger().info(
+                    f"UDP sent: {packet}"
+                )
+                self.last_log_time = now
+
+        except OSError as error:
+            self.get_logger().error(
+                f"UDP send failed: {error}"
+            )
+
+    def destroy_node(self):
+        self.udp.close()
+        super().destroy_node()
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = ArmESP32Bridge()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

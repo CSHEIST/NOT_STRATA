@@ -1,0 +1,22 @@
+arm:
+  communication:
+    esp32_ip: "192.168.4.2"
+    esp32_port: 4210
+
+  base:
+    urdf_min_deg: -73.3
+    urdf_max_deg: 73.3
+
+    real_min_deg: 10.0
+    real_max_deg: 170.0
+
+    channel: 0
+
+  shoulder:
+    urdf_min_deg: -90.0
+    urdf_max_deg: 90.0
+
+    real_min_deg: 17.0
+    real_max_deg: 172.0
+
+    channel: 1
